@@ -1,0 +1,106 @@
+/* ============================================================
+   Bondies Template – iOS / Apple
+   Inspired by iOS system design: SF Pro, grouped inset style,
+   system blue (#007AFF), hairline separators, rounded cards.
+   ============================================================ */
+
+.bondie-template-ios {
+	font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+}
+
+/* Header */
+.bondie-template-ios .bondie-schedule__header {
+	padding: 0 0 14px 0;
+	border-bottom: none;
+}
+
+.bondie-template-ios .bondie-schedule__title {
+	font-size: 1.375rem;
+	font-weight: 700;
+	color: #000;
+	letter-spacing: -0.022em;
+	margin-bottom: 0.2em;
+}
+
+.bondie-template-ios .bondie-schedule__subtitle {
+	font-size: 0.9375rem;
+	color: #8e8e93;
+}
+
+.bondie-template-ios .bondie-schedule__notes {
+	background: rgba(0, 122, 255, 0.1);
+	color: #007aff;
+	padding: 3px 11px;
+	border-radius: 20px;
+	font-size: 0.8125rem;
+	font-weight: 600;
+}
+
+/* Table wrap – inset card */
+.bondie-template-ios .bondie-schedule__table-wrap {
+	background: #fff;
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow:
+		0 0 0 0.5px rgba(0, 0, 0, 0.08),
+		0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Table */
+.bondie-template-ios .bondie-schedule__table thead tr {
+	background: #f2f2f7;
+}
+
+.bondie-template-ios .bondie-schedule__table th {
+	padding: 10px 16px;
+	font-size: 0.6875rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+	color: #8e8e93;
+	border-bottom: 0.5px solid rgba(60, 60, 67, 0.2);
+	white-space: nowrap;
+}
+
+.bondie-template-ios .bondie-schedule__table td {
+	padding: 11px 16px;
+	font-size: 0.9375rem;
+	color: #000;
+	border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
+	font-variant-numeric: tabular-nums;
+}
+
+.bondie-template-ios .bondie-schedule__table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.bondie-template-ios .bondie-schedule__table tbody tr:nth-child(even) td {
+	background: rgba(0, 0, 0, 0.018);
+}
+
+/* Footer */
+.bondie-template-ios .bondie-schedule__footer {
+	margin-top: 14px;
+}
+
+.bondie-template-ios .bondie-pdf-btn {
+	background: #007aff;
+	color: #fff;
+	padding: 10px 24px;
+	border: none;
+	border-radius: 10px;
+	font-size: 1rem;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	transition: opacity 0.15s;
+}
+
+.bondie-template-ios .bondie-pdf-btn:hover,
+.bondie-template-ios .bondie-pdf-btn:focus {
+	opacity: 0.82;
+	outline: none;
+}
+
+.bondie-template-ios .bondie-pdf-btn:active {
+	opacity: 0.65;
+}

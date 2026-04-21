@@ -1,0 +1,152 @@
+/* ============================================================
+   Bondies – Public Base Styles
+   ============================================================ */
+
+.bondie-schedule {
+	font-family: inherit;
+	width: 100%;
+	margin: 1.5em 0;
+	box-sizing: border-box;
+}
+
+.bondie-schedule *,
+.bondie-schedule *::before,
+.bondie-schedule *::after {
+	box-sizing: inherit;
+}
+
+/* Header */
+.bondie-schedule__header {
+	margin-bottom: 0.75em;
+}
+
+.bondie-schedule__title {
+	margin: 0 0 0.2em;
+	padding: 0;
+	line-height: 1.2;
+}
+
+.bondie-schedule__subtitle {
+	margin: 0;
+	line-height: 1.4;
+}
+
+.bondie-schedule__arrow {
+	display: inline-block;
+	margin: 0 0.35em;
+}
+
+.bondie-schedule__notes {
+	display: inline-block;
+	margin-top: 0.4em;
+}
+
+/* Table wrap */
+.bondie-schedule__table-wrap {
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+	width: 100%;
+}
+
+/* Table */
+.bondie-schedule__table {
+	border-collapse: collapse;
+	width: 100%;
+	min-width: 300px;
+}
+
+.bondie-schedule__table th,
+.bondie-schedule__table td {
+	text-align: left;
+	vertical-align: middle;
+}
+
+.bondie-no-services {
+	text-align: center;
+	color: #888;
+	font-style: italic;
+	padding: 1.5em !important;
+}
+
+/* Footer */
+.bondie-schedule__footer {
+	margin-top: 1em;
+}
+
+/* Print button base */
+.bondie-pdf-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45em;
+	cursor: pointer;
+	font-family: inherit;
+	line-height: 1;
+}
+
+/* Error / Empty states */
+.bondie-error,
+.bondie-empty {
+	color: #888;
+	font-style: italic;
+}
+
+/* ============================================================
+   Print / PDF styles
+   ============================================================ */
+
+@media print {
+	/* Hide everything on the page */
+	body > * {
+		visibility: hidden;
+	}
+
+	/* Reveal only the element being printed */
+	.bondie-schedule.bondie-printing,
+	.bondie-schedule.bondie-printing * {
+		visibility: visible;
+	}
+
+	/* Position it flush top-left so it fills the paper */
+	.bondie-schedule.bondie-printing {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		padding: 1.5cm 1.5cm 1cm;
+	}
+
+	/* Never print the PDF button */
+	.bondie-pdf-btn {
+		display: none !important;
+	}
+
+	/* Remove overflow clips so full table prints */
+	.bondie-schedule__table-wrap {
+		overflow: visible !important;
+	}
+
+	/* Force table to fill the page width */
+	.bondie-schedule__table {
+		width: 100% !important;
+		min-width: 0 !important;
+		font-size: 9pt;
+	}
+
+	.bondie-schedule__table th,
+	.bondie-schedule__table td {
+		padding: 4pt 6pt !important;
+	}
+
+	/* Keep rows together when possible */
+	.bondie-schedule__table tbody tr {
+		page-break-inside: avoid;
+	}
+
+	/* Notes badge – flatten for print */
+	.bondie-schedule__notes {
+		border-radius: 0 !important;
+		background: none !important;
+		color: inherit !important;
+		font-size: 0.85em;
+	}
+}

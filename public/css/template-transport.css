@@ -1,0 +1,151 @@
+/* ============================================================
+   Bondies Template – Transport
+   Bold & vibrant: gradient header, strong brand colors,
+   inspired by modern public-transport app design.
+   Palette: Sunrise Orange #ff6b35 → Amber #f7c948
+   ============================================================ */
+
+.bondie-template-transport {
+	font-family: 'Inter', ui-sans-serif, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+	border-radius: 14px;
+	overflow: hidden;
+	box-shadow: 0 4px 20px rgba(255, 107, 53, 0.18);
+}
+
+/* Header */
+.bondie-template-transport .bondie-schedule__header {
+	background: linear-gradient(130deg, #ff6b35 0%, #f7c948 100%);
+	padding: 22px 24px 18px;
+	margin-bottom: 0;
+	position: relative;
+	overflow: hidden;
+}
+
+/* Decorative circle */
+.bondie-template-transport .bondie-schedule__header::before {
+	content: '';
+	position: absolute;
+	top: -50px;
+	right: -30px;
+	width: 180px;
+	height: 180px;
+	background: rgba(255, 255, 255, 0.14);
+	border-radius: 50%;
+	pointer-events: none;
+}
+
+.bondie-template-transport .bondie-schedule__header::after {
+	content: '';
+	position: absolute;
+	bottom: -60px;
+	right: 60px;
+	width: 120px;
+	height: 120px;
+	background: rgba(255, 255, 255, 0.08);
+	border-radius: 50%;
+	pointer-events: none;
+}
+
+.bondie-template-transport .bondie-schedule__title {
+	font-size: 1.5rem;
+	font-weight: 800;
+	color: #fff;
+	letter-spacing: -0.01em;
+	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+	margin-bottom: 0.15em;
+	position: relative;
+}
+
+.bondie-template-transport .bondie-schedule__subtitle {
+	color: rgba(255, 255, 255, 0.92);
+	font-size: 0.9375rem;
+	font-weight: 600;
+	position: relative;
+}
+
+.bondie-template-transport .bondie-schedule__notes {
+	background: rgba(255, 255, 255, 0.28);
+	color: #fff;
+	padding: 3px 12px;
+	border-radius: 20px;
+	font-size: 0.75rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+	position: relative;
+}
+
+/* Table wrap */
+.bondie-template-transport .bondie-schedule__table-wrap {
+	border-left: 2.5px solid #ff6b35;
+	border-right: 2.5px solid #ff6b35;
+	border-bottom: 2.5px solid #ff6b35;
+	overflow: hidden;
+}
+
+/* Table */
+.bondie-template-transport .bondie-schedule__table thead tr {
+	background: #fff7f2;
+}
+
+.bondie-template-transport .bondie-schedule__table th {
+	padding: 11px 16px;
+	font-size: 0.72rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: #c94010;
+	border-bottom: 2px solid #ff6b35;
+	white-space: nowrap;
+}
+
+.bondie-template-transport .bondie-schedule__table td {
+	padding: 11px 16px;
+	font-size: 0.9375rem;
+	color: #1a1a1a;
+	border-bottom: 1px solid #ffe0d0;
+	font-variant-numeric: tabular-nums;
+	font-weight: 500;
+}
+
+.bondie-template-transport .bondie-schedule__table tbody tr:nth-child(even) td {
+	background: #fff7f2;
+}
+
+.bondie-template-transport .bondie-schedule__table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.bondie-template-transport .bondie-schedule__table tbody tr:hover td {
+	background: #fff0e6;
+}
+
+/* Footer */
+.bondie-template-transport .bondie-schedule__footer {
+	padding: 16px 0 4px;
+}
+
+.bondie-template-transport .bondie-pdf-btn {
+	background: linear-gradient(130deg, #ff6b35, #f7c948);
+	color: #fff;
+	padding: 11px 26px;
+	border: none;
+	border-radius: 26px;
+	font-size: 0.9375rem;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+	box-shadow: 0 4px 14px rgba(255, 107, 53, 0.4);
+	transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.bondie-template-transport .bondie-pdf-btn:hover,
+.bondie-template-transport .bondie-pdf-btn:focus {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 18px rgba(255, 107, 53, 0.48);
+	outline: none;
+}
+
+.bondie-template-transport .bondie-pdf-btn:active {
+	transform: translateY(0);
+	box-shadow: 0 2px 8px rgba(255, 107, 53, 0.35);
+}

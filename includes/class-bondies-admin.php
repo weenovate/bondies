@@ -1,0 +1,262 @@
+<?php
+defined( 'ABSPATH' ) || exit;
+
+class Bondies_Admin {
+
+	public function init() {
+		add_action( 'add_meta_boxes',        [ $this, 'add_meta_boxes' ] );
+		add_action( 'save_post',             [ $this, 'save_meta' ], 10, 2 );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue' ] );
+	}
+
+	public function enqueue( $hook ) {
+		global $post;
+		if ( ! in_array( $hook, [ 'post.php', 'post-new.php' ], true ) ) {
+			return;
+		}
+		if ( ! $post || 'bondie_schedule' !== $post->post_type ) {
+			return;
+		}
+		wp_enqueue_style(
+			'bondies-admin',
+			BONDIES_URL . 'admin/css/bondies-admin.css',
+			[],
+			BONDIES_VERSION
+		);
+		wp_enqueue_script(
+			'bondies-admin',
+			BONDIES_URL . 'admin/js/bondies-admin.js',
+			[ 'jquery' ],
+			BONDIES_VERSION,
+			true
+		);
+	}
+
+	// -------------------------------------------------------------------------
+	// Meta Boxes
+	// -------------------------------------------------------------------------
+
+	public function add_meta_boxes() {
+		add_meta_box(
+			'bondie_info',
+			__( 'Información del Recorrido', 'bondies' ),
+			[ $this, 'render_info_box' ],
+			'bondie_schedule',
+			'normal',
+			'high'
+		);
+		add_meta_box(
+			'bondie_table',
+			__( 'Editor de Horarios', 'bondies' ),
+			[ $this, 'render_table_box' ],
+			'bondie_schedule',
+			'normal',
+			'default'
+		);
+		add_meta_box(
+			'bondie_template',
+			__( 'Template Visual', 'bondies' ),
+			[ $this, 'render_template_box' ],
+			'bondie_schedule',
+			'side',
+			'default'
+		);
+	}
+
+	public function render_info_box( $post ) {
+		wp_nonce_field( 'bondie_save_meta', 'bondie_nonce' );
+		$start = get_post_meta( $post->ID, '_bondie_start_stop', true );
+		$end   = get_post_meta( $post->ID, '_bondie_end_stop',   true );
+		$notes = get_post_meta( $post->ID, '_bondie_notes',      true );
+		?>
+		<table class="form-table bondie-info-table">
+			<tr>
+				<th><label for="bondie_start_stop"><?php esc_html_e( 'Parada Inicial', 'bondies' ); ?></label></th>
+				<td>
+					<input type="text" id="bondie_start_stop" name="bondie_start_stop"
+					       value="<?php echo esc_attr( $start ); ?>" class="regular-text"
+					       placeholder="<?php esc_attr_e( 'Ej: Terminal Norte', 'bondies' ); ?>">
+					<p class="description"><?php esc_html_e( 'Nombre de la parada de origen del recorrido.', 'bondies' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="bondie_end_stop"><?php esc_html_e( 'Parada Final', 'bondies' ); ?></label></th>
+				<td>
+					<input type="text" id="bondie_end_stop" name="bondie_end_stop"
+					       value="<?php echo esc_attr( $end ); ?>" class="regular-text"
+					       placeholder="<?php esc_attr_e( 'Ej: Terminal Sur', 'bondies' ); ?>">
+					<p class="description"><?php esc_html_e( 'Nombre de la parada de destino del recorrido.', 'bondies' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="bondie_notes"><?php esc_html_e( 'Notas / Tipo de Día', 'bondies' ); ?></label></th>
+				<td>
+					<input type="text" id="bondie_notes" name="bondie_notes"
+					       value="<?php echo esc_attr( $notes ); ?>" class="regular-text"
+					       placeholder="<?php esc_attr_e( 'Ej: Días Hábiles, Domingos y Feriados…', 'bondies' ); ?>">
+					<p class="description"><?php esc_html_e( 'Se mostrará como etiqueta junto al subtítulo.', 'bondies' ); ?></p>
+				</td>
+			</tr>
+		</table>
+		<?php
+	}
+
+	public function render_template_box( $post ) {
+		$current   = get_post_meta( $post->ID, '_bondie_template', true ) ?: 'material';
+		$templates = $this->get_templates();
+		?>
+		<div class="bondie-template-selector">
+			<?php foreach ( $templates as $key => $tpl ) : ?>
+				<label class="bondie-tpl-option <?php echo $current === $key ? 'is-active' : ''; ?>">
+					<input type="radio" name="bondie_template" value="<?php echo esc_attr( $key ); ?>"
+					       <?php checked( $current, $key ); ?>>
+					<span class="bondie-tpl-preview bondie-tpl-preview--<?php echo esc_attr( $key ); ?>">
+						<span class="bondie-tpl-preview__bar"></span>
+						<span class="bondie-tpl-preview__row"></span>
+						<span class="bondie-tpl-preview__row"></span>
+						<span class="bondie-tpl-preview__row"></span>
+					</span>
+					<span class="bondie-tpl-name"><?php echo esc_html( $tpl['name'] ); ?></span>
+				</label>
+			<?php endforeach; ?>
+		</div>
+		<p class="description" style="margin-top:10px;">
+			<?php esc_html_e( 'Seleccioná el estilo visual para la tabla.', 'bondies' ); ?>
+		</p>
+		<?php
+	}
+
+	public function render_table_box( $post ) {
+		$stops_json = get_post_meta( $post->ID, '_bondie_stops', true ) ?: '[]';
+		$trips_json = get_post_meta( $post->ID, '_bondie_trips', true ) ?: '[]';
+		$stops      = json_decode( $stops_json, true ) ?: [];
+		$trips      = json_decode( $trips_json, true ) ?: [];
+		?>
+		<div class="bondie-table-editor">
+			<div class="bondie-table-editor__toolbar">
+				<button type="button" class="button bondie-add-stop">
+					&#43; <?php esc_html_e( 'Agregar Parada', 'bondies' ); ?>
+				</button>
+				<button type="button" class="button bondie-add-trip">
+					&#43; <?php esc_html_e( 'Agregar Servicio', 'bondies' ); ?>
+				</button>
+				<span class="bondie-table-hint">
+					<?php esc_html_e( 'Cada columna = una parada · Cada fila = un servicio (horario de paso)', 'bondies' ); ?>
+				</span>
+			</div>
+
+			<div class="bondie-table-editor__wrap">
+				<table class="bondie-editor-table" id="bondie-editor-table">
+					<thead>
+						<tr id="bondie-stops-row">
+							<th class="bondie-row-num">#</th>
+							<?php foreach ( $stops as $stop ) : ?>
+								<th class="bondie-stop-col">
+									<input type="text" class="bondie-stop-input"
+									       value="<?php echo esc_attr( $stop ); ?>"
+									       placeholder="<?php esc_attr_e( 'Parada', 'bondies' ); ?>">
+									<button type="button" class="bondie-remove-stop"
+									        title="<?php esc_attr_e( 'Eliminar parada', 'bondies' ); ?>">&#x2715;</button>
+								</th>
+							<?php endforeach; ?>
+						</tr>
+					</thead>
+					<tbody id="bondie-trips-body">
+						<?php foreach ( $trips as $r => $trip ) : ?>
+							<tr class="bondie-trip-row">
+								<td class="bondie-row-num">
+									<span class="bondie-row-index"><?php echo $r + 1; ?></span>
+									<button type="button" class="bondie-remove-trip"
+									        title="<?php esc_attr_e( 'Eliminar servicio', 'bondies' ); ?>">&#x2715;</button>
+								</td>
+								<?php foreach ( $stops as $c => $stop ) : ?>
+									<td>
+										<input type="text" class="bondie-time-input"
+										       value="<?php echo esc_attr( $trip[ $c ] ?? '' ); ?>"
+										       placeholder="00:00">
+									</td>
+								<?php endforeach; ?>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
+
+			<input type="hidden" name="bondie_stops" id="bondie-stops-data"
+			       value="<?php echo esc_attr( $stops_json ); ?>">
+			<input type="hidden" name="bondie_trips" id="bondie-trips-data"
+			       value="<?php echo esc_attr( $trips_json ); ?>">
+		</div>
+		<?php
+	}
+
+	// -------------------------------------------------------------------------
+	// Save
+	// -------------------------------------------------------------------------
+
+	public function save_meta( $post_id, $post ) {
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return;
+		}
+		if ( ! isset( $_POST['bondie_nonce'] ) ) {
+			return;
+		}
+		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['bondie_nonce'] ) ), 'bondie_save_meta' ) ) {
+			return;
+		}
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return;
+		}
+		if ( 'bondie_schedule' !== $post->post_type ) {
+			return;
+		}
+
+		$text_fields = [
+			'_bondie_start_stop' => 'bondie_start_stop',
+			'_bondie_end_stop'   => 'bondie_end_stop',
+			'_bondie_notes'      => 'bondie_notes',
+			'_bondie_template'   => 'bondie_template',
+		];
+		foreach ( $text_fields as $meta_key => $post_key ) {
+			if ( isset( $_POST[ $post_key ] ) ) {
+				update_post_meta( $post_id, $meta_key, sanitize_text_field( wp_unslash( $_POST[ $post_key ] ) ) );
+			}
+		}
+
+		if ( isset( $_POST['bondie_stops'] ) ) {
+			$stops = json_decode( wp_unslash( $_POST['bondie_stops'] ), true );
+			if ( is_array( $stops ) ) {
+				$stops = array_values( array_map( 'sanitize_text_field', $stops ) );
+				update_post_meta( $post_id, '_bondie_stops', wp_json_encode( $stops ) );
+			}
+		}
+
+		if ( isset( $_POST['bondie_trips'] ) ) {
+			$trips = json_decode( wp_unslash( $_POST['bondie_trips'] ), true );
+			if ( is_array( $trips ) ) {
+				$clean = [];
+				foreach ( $trips as $trip ) {
+					if ( is_array( $trip ) ) {
+						$clean[] = array_values( array_map( 'sanitize_text_field', $trip ) );
+					}
+				}
+				update_post_meta( $post_id, '_bondie_trips', wp_json_encode( $clean ) );
+			}
+		}
+	}
+
+	// -------------------------------------------------------------------------
+	// Helpers
+	// -------------------------------------------------------------------------
+
+	private function get_templates() {
+		return [
+			'material'  => [ 'name' => 'Material Design' ],
+			'ios'       => [ 'name' => 'iOS / Apple'     ],
+			'classic'   => [ 'name' => 'Clásico'         ],
+			'dark'      => [ 'name' => 'Dark Mode'       ],
+			'minimal'   => [ 'name' => 'Minimal'         ],
+			'transport' => [ 'name' => 'Transport'       ],
+		];
+	}
+}

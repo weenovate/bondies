@@ -1,0 +1,100 @@
+/* ============================================================
+   Bondies Template – Minimal
+   Ultra-clean: only horizontal rules, generous white space,
+   all-caps small labels, ink-black typography.
+   ============================================================ */
+
+.bondie-template-minimal {
+	font-family: 'Inter', ui-sans-serif, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Header */
+.bondie-template-minimal .bondie-schedule__header {
+	padding-bottom: 12px;
+	border-bottom: 2px solid #111;
+	margin-bottom: 0;
+}
+
+.bondie-template-minimal .bondie-schedule__title {
+	font-size: 1.125rem;
+	font-weight: 700;
+	color: #111;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	margin-bottom: 0.25em;
+}
+
+.bondie-template-minimal .bondie-schedule__subtitle {
+	font-size: 0.875rem;
+	color: #888;
+	letter-spacing: 0.03em;
+}
+
+.bondie-template-minimal .bondie-schedule__notes {
+	font-size: 0.72rem;
+	color: #bbb;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+}
+
+/* Table */
+.bondie-template-minimal .bondie-schedule__table {
+	border-collapse: collapse;
+}
+
+.bondie-template-minimal .bondie-schedule__table th {
+	padding: 12px 16px 8px;
+	font-size: 0.65rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	color: #999;
+	border-bottom: 1.5px solid #111;
+	white-space: nowrap;
+	background: transparent;
+}
+
+.bondie-template-minimal .bondie-schedule__table td {
+	padding: 11px 16px;
+	font-size: 0.9375rem;
+	color: #222;
+	border-bottom: 1px solid #eee;
+	font-variant-numeric: tabular-nums;
+	background: transparent;
+}
+
+.bondie-template-minimal .bondie-schedule__table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.bondie-template-minimal .bondie-schedule__table tbody tr:hover td {
+	color: #000;
+	background: #fafafa;
+}
+
+/* Footer */
+.bondie-template-minimal .bondie-schedule__footer {
+	margin-top: 14px;
+	padding-top: 14px;
+	border-top: 1px solid #eee;
+}
+
+.bondie-template-minimal .bondie-pdf-btn {
+	background: none;
+	color: #bbb;
+	padding: 0;
+	border: none;
+	border-bottom: 1px solid currentColor;
+	border-radius: 0;
+	font-size: 0.75rem;
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	transition: color 0.15s;
+}
+
+.bondie-template-minimal .bondie-pdf-btn:hover,
+.bondie-template-minimal .bondie-pdf-btn:focus {
+	color: #111;
+	outline: none;
+}

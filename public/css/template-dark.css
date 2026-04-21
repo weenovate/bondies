@@ -1,0 +1,117 @@
+/* ============================================================
+   Bondies Template – Dark Mode
+   GitHub-Dark inspired palette.
+   Background: #0d1117 · Surface: #161b22 · Accent: #58a6ff
+   ============================================================ */
+
+.bondie-template-dark {
+	--bd-bg:      #0d1117;
+	--bd-surface: #161b22;
+	--bd-border:  #30363d;
+	--bd-accent:  #58a6ff;
+	--bd-text:    #e6edf3;
+	--bd-muted:   #8b949e;
+	--bd-hover:   #1c2128;
+
+	font-family: 'Inter', ui-sans-serif, -apple-system, 'Segoe UI', sans-serif;
+	background: var(--bd-bg);
+	padding: 20px 24px;
+	border-radius: 10px;
+	color: var(--bd-text);
+}
+
+/* Header */
+.bondie-template-dark .bondie-schedule__header {
+	padding-bottom: 16px;
+	border-bottom: 1px solid var(--bd-border);
+	margin-bottom: 16px;
+}
+
+.bondie-template-dark .bondie-schedule__title {
+	font-size: 1.375rem;
+	font-weight: 600;
+	color: var(--bd-text);
+	letter-spacing: -0.01em;
+	margin-bottom: 0.2em;
+}
+
+.bondie-template-dark .bondie-schedule__subtitle {
+	color: var(--bd-muted);
+	font-size: 0.9375rem;
+}
+
+.bondie-template-dark .bondie-schedule__notes {
+	background: rgba(88, 166, 255, 0.12);
+	color: var(--bd-accent);
+	padding: 2px 10px;
+	border-radius: 20px;
+	font-size: 0.78rem;
+	font-weight: 500;
+	border: 1px solid rgba(88, 166, 255, 0.25);
+	letter-spacing: 0.03em;
+}
+
+/* Table wrap */
+.bondie-template-dark .bondie-schedule__table-wrap {
+	border: 1px solid var(--bd-border);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+/* Table */
+.bondie-template-dark .bondie-schedule__table {
+	background: var(--bd-surface);
+}
+
+.bondie-template-dark .bondie-schedule__table thead tr {
+	background: rgba(88, 166, 255, 0.07);
+}
+
+.bondie-template-dark .bondie-schedule__table th {
+	padding: 11px 16px;
+	font-size: 0.72rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--bd-accent);
+	border-bottom: 1px solid var(--bd-border);
+	white-space: nowrap;
+}
+
+.bondie-template-dark .bondie-schedule__table td {
+	padding: 11px 16px;
+	font-size: 0.9rem;
+	color: var(--bd-text);
+	border-bottom: 1px solid var(--bd-border);
+	font-variant-numeric: tabular-nums;
+}
+
+.bondie-template-dark .bondie-schedule__table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.bondie-template-dark .bondie-schedule__table tbody tr:hover td {
+	background: var(--bd-hover);
+}
+
+/* Footer */
+.bondie-template-dark .bondie-schedule__footer {
+	margin-top: 16px;
+}
+
+.bondie-template-dark .bondie-pdf-btn {
+	background: transparent;
+	color: var(--bd-accent);
+	padding: 8px 18px;
+	border: 1px solid var(--bd-accent);
+	border-radius: 6px;
+	font-size: 0.875rem;
+	font-weight: 500;
+	transition: background 0.2s;
+}
+
+.bondie-template-dark .bondie-pdf-btn:hover,
+.bondie-template-dark .bondie-pdf-btn:focus {
+	background: rgba(88, 166, 255, 0.12);
+	outline: none;
+}
