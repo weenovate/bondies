@@ -3,7 +3,7 @@
  * Plugin Name:  Bondies – Horarios de Colectivos
  * Plugin URI:   https://www.weenovate.com
  * Description:  Muestra tablas de horarios de colectivos mediante shortcode, con múltiples templates y descarga en PDF.
- * Version:      1.0.0
+ * Version:      1.5.0
  * Author:       Weenovate
  * Author URI:   https://www.weenovate.com
  * Text Domain:  bondies
@@ -14,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'BONDIES_VERSION', '1.0.0' );
+define( 'BONDIES_VERSION', '1.5.0' );
 define( 'BONDIES_DIR',     plugin_dir_path( __FILE__ ) );
 define( 'BONDIES_URL',     plugin_dir_url( __FILE__ ) );
 

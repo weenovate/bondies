@@ -20,12 +20,16 @@ class Bondies_Shortcode {
 			return '<p class="bondie-error">' . esc_html__( 'Horario no encontrado.', 'bondies' ) . '</p>';
 		}
 
+		$admin     = new Bondies_Admin();
+		$instances = $admin->get_instances( $post_id );
+		if ( empty( $instances ) ) {
+			$instances = [ [ 'label' => '', 'stops' => [], 'trips' => [] ] ];
+		}
+
 		$start    = get_post_meta( $post_id, '_bondie_start_stop', true );
 		$end      = get_post_meta( $post_id, '_bondie_end_stop',   true );
 		$notes    = get_post_meta( $post_id, '_bondie_notes',      true );
 		$template = get_post_meta( $post_id, '_bondie_template',   true ) ?: 'material';
-		$stops    = json_decode( get_post_meta( $post_id, '_bondie_stops', true ) ?: '[]', true ) ?: [];
-		$trips    = json_decode( get_post_meta( $post_id, '_bondie_trips', true ) ?: '[]', true ) ?: [];
 
 		$allowed_templates = [ 'material', 'ios', 'classic', 'dark', 'minimal', 'transport' ];
 		if ( ! in_array( $template, $allowed_templates, true ) ) {
@@ -36,6 +40,7 @@ class Bondies_Shortcode {
 
 		$uid      = 'bondie-schedule-' . $post_id;
 		$logo_url = $this->get_logo_url();
+		$has_tabs = count( $instances ) > 1;
 
 		ob_start();
 		?>
@@ -65,37 +70,64 @@ class Bondies_Shortcode {
 				<?php endif; ?>
 			</div>
 
-			<?php if ( ! empty( $stops ) ) : ?>
-				<div class="bondie-schedule__table-wrap">
-					<table class="bondie-schedule__table" role="table">
-						<thead>
-							<tr>
-								<?php foreach ( $stops as $stop ) : ?>
-									<th scope="col"><?php echo esc_html( $stop ); ?></th>
-								<?php endforeach; ?>
-							</tr>
-						</thead>
-						<tbody>
-							<?php foreach ( $trips as $trip ) : ?>
-								<tr>
-									<?php foreach ( $stops as $i => $stop ) : ?>
-										<td><?php echo $this->format_cell( $trip[ $i ] ?? '' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
-									<?php endforeach; ?>
-								</tr>
-							<?php endforeach; ?>
-							<?php if ( empty( $trips ) ) : ?>
-								<tr>
-									<td colspan="<?php echo count( $stops ); ?>" class="bondie-no-services">
-										<?php esc_html_e( 'No hay servicios cargados.', 'bondies' ); ?>
-									</td>
-								</tr>
-							<?php endif; ?>
-						</tbody>
-					</table>
+			<?php if ( $has_tabs ) : ?>
+				<div class="bondie-tabs" role="tablist">
+					<?php foreach ( $instances as $i => $inst ) : ?>
+						<button type="button"
+						        class="bondie-tab<?php echo 0 === $i ? ' is-active' : ''; ?>"
+						        role="tab"
+						        aria-selected="<?php echo 0 === $i ? 'true' : 'false'; ?>"
+						        aria-controls="<?php echo esc_attr( $uid . '-inst-' . $i ); ?>"
+						        data-tab="<?php echo $i; ?>">
+							<?php echo esc_html( $inst['label'] ?: sprintf( __( 'Instancia %d', 'bondies' ), $i + 1 ) ); ?>
+						</button>
+					<?php endforeach; ?>
 				</div>
-			<?php else : ?>
-				<p class="bondie-empty"><?php esc_html_e( 'No hay paradas configuradas.', 'bondies' ); ?></p>
 			<?php endif; ?>
+
+			<?php foreach ( $instances as $i => $inst ) :
+				$stops = $inst['stops'] ?? [];
+				$trips = $inst['trips'] ?? [];
+			?>
+				<div class="bondie-instance-panel<?php echo $has_tabs ? ' bondie-instance-panel--tabbed' : ''; echo 0 === $i ? ' is-active' : ''; ?>"
+				     id="<?php echo esc_attr( $uid . '-inst-' . $i ); ?>"
+				     <?php if ( $has_tabs ) echo 'role="tabpanel"'; ?>
+				     <?php if ( $has_tabs && 0 !== $i ) echo 'hidden'; ?>>
+
+					<?php if ( ! empty( $stops ) ) : ?>
+						<div class="bondie-schedule__table-wrap">
+							<table class="bondie-schedule__table" role="table">
+								<thead>
+									<tr>
+										<?php foreach ( $stops as $stop ) : ?>
+											<th scope="col"><?php echo esc_html( $stop ); ?></th>
+										<?php endforeach; ?>
+									</tr>
+								</thead>
+								<tbody>
+									<?php foreach ( $trips as $trip ) : ?>
+										<tr>
+											<?php foreach ( $stops as $idx => $stop ) : ?>
+												<td><?php echo $this->format_cell( $trip[ $idx ] ?? '' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
+											<?php endforeach; ?>
+										</tr>
+									<?php endforeach; ?>
+									<?php if ( empty( $trips ) ) : ?>
+										<tr>
+											<td colspan="<?php echo count( $stops ); ?>" class="bondie-no-services">
+												<?php esc_html_e( 'No hay servicios cargados.', 'bondies' ); ?>
+											</td>
+										</tr>
+									<?php endif; ?>
+								</tbody>
+							</table>
+						</div>
+					<?php else : ?>
+						<p class="bondie-empty"><?php esc_html_e( 'No hay paradas configuradas.', 'bondies' ); ?></p>
+					<?php endif; ?>
+
+				</div>
+			<?php endforeach; ?>
 
 			<div class="bondie-schedule__footer">
 				<button type="button" class="bondie-pdf-btn" data-schedule-id="<?php echo esc_attr( $uid ); ?>">
@@ -149,7 +181,6 @@ class Bondies_Shortcode {
 	}
 
 	private function get_logo_url() {
-		// 1. Logo personalizado del tema (Customizer → Identidad del sitio)
 		$logo_id = get_theme_mod( 'custom_logo' );
 		if ( $logo_id ) {
 			$url = wp_get_attachment_image_url( $logo_id, 'medium' );
@@ -157,7 +188,6 @@ class Bondies_Shortcode {
 				return esc_url_raw( $url );
 			}
 		}
-		// 2. Ícono del sitio como fallback
 		$icon_id = get_option( 'site_icon' );
 		if ( $icon_id ) {
 			$url = wp_get_attachment_image_url( $icon_id, 'medium' );

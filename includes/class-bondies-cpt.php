@@ -19,7 +19,7 @@ class Bondies_CPT {
 			'view_item'          => __( 'Ver Horario',           'bondies' ),
 			'search_items'       => __( 'Buscar Horarios',       'bondies' ),
 			'not_found'          => __( 'No se encontraron horarios.', 'bondies' ),
-			'menu_name'          => __( 'Bondies',               'bondies' ),
+			'menu_name'          => __( 'Horarios',               'bondies' ),
 		];
 
 		register_post_type( 'bondie_schedule', [

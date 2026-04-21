@@ -1,15 +1,4 @@
-/* Bondies – Public JavaScript
- * Maneja el botón "Imprimir / Guardar PDF".
- *
- * Estrategia:
- *  1. Se crea (una sola vez) #bondies-print-area al final del <body>.
- *  2. Al hacer clic en el botón, se clona la tabla completa (incluyendo
- *     el logo ya embebido en el HTML) y se quita solo el botón de impresión.
- *  3. window.print() abre el diálogo de impresión/PDF.
- *  4. El CSS @media print oculta body>* con display:none y solo muestra
- *     #bondies-print-area, garantizando que el footer del tema no aparezca.
- *  5. Pasado 1 s se limpia el área para no dejar basura en el DOM.
- */
+/* Bondies – Public JavaScript */
 (function () {
 	'use strict';
 
@@ -24,6 +13,38 @@
 		return printArea;
 	}
 
+	// ─── Tab switching ────────────────────────────────────────────────────────
+
+	function handleTabClick( e ) {
+		var btn = e.target.closest( '.bondie-tabs .bondie-tab' );
+		if ( !btn ) return;
+
+		var schedule = btn.closest( '.bondie-schedule' );
+		if ( !schedule ) return;
+
+		// Update tab buttons
+		schedule.querySelectorAll( '.bondie-tab' ).forEach( function (t) {
+			t.classList.remove( 'is-active' );
+			t.setAttribute( 'aria-selected', 'false' );
+		} );
+		btn.classList.add( 'is-active' );
+		btn.setAttribute( 'aria-selected', 'true' );
+
+		// Show target panel
+		var targetId = btn.getAttribute( 'aria-controls' );
+		schedule.querySelectorAll( '.bondie-instance-panel' ).forEach( function (panel) {
+			panel.hidden = true;
+			panel.classList.remove( 'is-active' );
+		} );
+		var target = document.getElementById( targetId );
+		if ( target ) {
+			target.hidden = false;
+			target.classList.add( 'is-active' );
+		}
+	}
+
+	// ─── Print / PDF ──────────────────────────────────────────────────────────
+
 	function handlePrintClick( e ) {
 		var btn = e.target.closest( '.bondie-pdf-btn' );
 		if ( !btn ) return;
@@ -34,21 +55,26 @@
 		var el = document.getElementById( scheduleId );
 		if ( !el ) return;
 
-		var area = getPrintArea();
+		var area  = getPrintArea();
+		var clone = el.cloneNode( true );
 
-		// Clonar la tabla y quitar el botón de impresión del clon
-		var clone    = el.cloneNode( true );
+		// Show all instance panels (override hidden for multi-instance)
+		clone.querySelectorAll( '.bondie-instance-panel' ).forEach( function (panel) {
+			panel.removeAttribute( 'hidden' );
+			panel.classList.add( 'is-active' );
+		} );
+
+		// Remove print button from clone
 		var cloneBtn = clone.querySelector( '.bondie-pdf-btn' );
 		if ( cloneBtn && cloneBtn.parentNode ) {
 			cloneBtn.parentNode.removeChild( cloneBtn );
 		}
+
 		area.appendChild( clone );
 
-		// Imprimir
 		requestAnimationFrame( function () {
 			window.print();
 
-			// Limpiar después del diálogo
 			setTimeout( function () {
 				while ( area.firstChild ) {
 					area.removeChild( area.firstChild );
@@ -57,5 +83,6 @@
 		} );
 	}
 
+	document.addEventListener( 'click', handleTabClick );
 	document.addEventListener( 'click', handlePrintClick );
 } )();

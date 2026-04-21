@@ -23,7 +23,6 @@ class Bondies_Admin {
 			[],
 			BONDIES_VERSION
 		);
-		// SheetJS bundleado localmente (no requiere internet)
 		wp_enqueue_script(
 			'sheetjs',
 			BONDIES_URL . 'admin/js/xlsx.mini.min.js',
@@ -97,12 +96,12 @@ class Bondies_Admin {
 				</td>
 			</tr>
 			<tr>
-				<th><label for="bondie_notes"><?php esc_html_e( 'Notas / Tipo de Día', 'bondies' ); ?></label></th>
+				<th><label for="bondie_notes"><?php esc_html_e( 'Notas', 'bondies' ); ?></label></th>
 				<td>
 					<input type="text" id="bondie_notes" name="bondie_notes"
 					       value="<?php echo esc_attr( $notes ); ?>" class="regular-text"
-					       placeholder="<?php esc_attr_e( 'Ej: Días Hábiles, Domingos y Feriados…', 'bondies' ); ?>">
-					<p class="description"><?php esc_html_e( 'Se mostrará como etiqueta junto al subtítulo.', 'bondies' ); ?></p>
+					       placeholder="<?php esc_attr_e( 'Ej: Servicio directo, sin paradas intermedias…', 'bondies' ); ?>">
+					<p class="description"><?php esc_html_e( 'Nota general que se mostrará bajo el subtítulo.', 'bondies' ); ?></p>
 				</td>
 			</tr>
 		</table>
@@ -135,84 +134,135 @@ class Bondies_Admin {
 	}
 
 	public function render_table_box( $post ) {
-		$stops_json = get_post_meta( $post->ID, '_bondie_stops', true ) ?: '[]';
-		$trips_json = get_post_meta( $post->ID, '_bondie_trips', true ) ?: '[]';
-		$stops      = json_decode( $stops_json, true ) ?: [];
-		$trips      = json_decode( $trips_json, true ) ?: [];
+		$instances = $this->get_instances( $post->ID );
+		if ( empty( $instances ) ) {
+			$instances = [ [ 'label' => '', 'stops' => [], 'trips' => [] ] ];
+		}
+		$count          = count( $instances );
+		$instances_json = wp_json_encode( $instances, JSON_UNESCAPED_UNICODE );
 		?>
-		<div class="bondie-table-editor">
-			<div class="bondie-table-editor__toolbar">
-				<button type="button" class="button bondie-add-stop">
-					&#43; <?php esc_html_e( 'Agregar Parada', 'bondies' ); ?>
-				</button>
-				<button type="button" class="button bondie-add-trip">
-					&#43; <?php esc_html_e( 'Agregar Servicio', 'bondies' ); ?>
-				</button>
-				<span class="bondie-table-hint">
-					<?php esc_html_e( 'Cada columna = una parada · Cada fila = un servicio (horario de paso)', 'bondies' ); ?>
-				</span>
+		<div class="bondie-instances-editor" data-max="4">
+
+			<div class="bondie-tabs-nav">
+				<?php foreach ( $instances as $i => $inst ) : ?>
+					<button type="button"
+					        class="bondie-tab-btn <?php echo 0 === $i ? 'is-active' : ''; ?>"
+					        data-tab="<?php echo $i; ?>">
+						<?php echo esc_html( $inst['label'] ?: sprintf( __( 'Instancia %d', 'bondies' ), $i + 1 ) ); ?>
+					</button>
+				<?php endforeach; ?>
+				<?php if ( $count < 4 ) : ?>
+					<button type="button" class="button bondie-add-instance">
+						&#43; <?php esc_html_e( 'Agregar Instancia', 'bondies' ); ?>
+					</button>
+				<?php endif; ?>
 			</div>
 
-			<div class="bondie-import-row">
-				<button type="button" class="button bondie-import-btn">
-					&#8679; <?php esc_html_e( 'Importar Excel / CSV', 'bondies' ); ?>
+			<?php foreach ( $instances as $i => $inst ) : ?>
+				<?php $this->render_instance_panel( $inst, $i, $count > 1 ); ?>
+			<?php endforeach; ?>
+
+		</div>
+
+		<!-- Template para nuevas instancias (oculto) -->
+		<div class="bondie-instance-template" style="display:none" aria-hidden="true">
+			<?php $this->render_instance_panel( [ 'label' => '', 'stops' => [], 'trips' => [] ], '__TPL__', true ); ?>
+		</div>
+
+		<input type="hidden" name="bondie_instances" id="bondie-instances-data"
+		       value="<?php echo esc_attr( $instances_json ); ?>">
+		<?php
+	}
+
+	private function render_instance_panel( $inst, $tab_idx, $show_remove ) {
+		$stops  = $inst['stops'] ?? [];
+		$trips  = $inst['trips'] ?? [];
+		$is_tpl = '__TPL__' === $tab_idx;
+		?>
+		<div class="bondie-tab-panel <?php echo 0 === $tab_idx ? 'is-active' : ''; ?>"
+		     data-tab="<?php echo esc_attr( $tab_idx ); ?>"
+		     <?php if ( 0 !== $tab_idx && ! $is_tpl ) echo 'style="display:none"'; ?>>
+
+			<div class="bondie-instance-header">
+				<input type="text" class="bondie-instance-label regular-text"
+				       value="<?php echo esc_attr( $inst['label'] ); ?>"
+				       placeholder="<?php esc_attr_e( 'Ej: Lunes a Viernes', 'bondies' ); ?>">
+				<button type="button" class="button bondie-remove-instance"
+				        <?php if ( ! $show_remove ) echo 'style="display:none"'; ?>>
+					<?php esc_html_e( 'Eliminar instancia', 'bondies' ); ?>
 				</button>
-				<input type="file" id="bondie-excel-file" class="bondie-excel-file"
-				       accept=".xlsx,.xls,.csv" style="display:none">
-				<span class="bondie-import-hint">
-					<?php esc_html_e( 'Fila 1 = nombres de paradas &nbsp;|&nbsp; Filas siguientes = horarios por servicio', 'bondies' ); ?>
-				</span>
 			</div>
 
-			<div class="bondie-table-editor__wrap">
-				<table class="bondie-editor-table" id="bondie-editor-table">
-					<thead>
-						<tr id="bondie-stops-row">
-							<th class="bondie-row-num">#</th>
-							<?php foreach ( $stops as $stop ) : ?>
-								<th class="bondie-stop-col">
-									<input type="text" class="bondie-stop-input"
-									       value="<?php echo esc_attr( $stop ); ?>"
-									       placeholder="<?php esc_attr_e( 'Parada', 'bondies' ); ?>">
-									<button type="button" class="bondie-remove-stop"
-									        title="<?php esc_attr_e( 'Eliminar parada', 'bondies' ); ?>">&#x2715;</button>
-								</th>
-							<?php endforeach; ?>
-						</tr>
-					</thead>
-					<tbody id="bondie-trips-body">
-						<?php foreach ( $trips as $r => $trip ) : ?>
-							<tr class="bondie-trip-row">
-								<td class="bondie-row-num">
-									<span class="bondie-row-index"><?php echo $r + 1; ?></span>
-									<button type="button" class="bondie-remove-trip"
-									        title="<?php esc_attr_e( 'Eliminar servicio', 'bondies' ); ?>">&#x2715;</button>
-								</td>
-								<?php foreach ( $stops as $c => $stop ) :
-											$cell = $this->split_cell( $trip[ $c ] ?? '' );
-										?>
-									<td>
-										<div class="bondie-cell-wrap">
-											<input type="text" class="bondie-time-input"
-											       value="<?php echo esc_attr( $cell['time'] ); ?>"
-											       placeholder="00:00">
-											<input type="text" class="bondie-ref-input"
-											       value="<?php echo esc_attr( $cell['ref'] ); ?>"
-											       maxlength="1"
-											       title="<?php esc_attr_e( 'Referencia opcional (ej: A = accesible)', 'bondies' ); ?>">
-										</div>
-									</td>
+			<div class="bondie-table-editor">
+				<div class="bondie-table-editor__toolbar">
+					<button type="button" class="button bondie-add-stop">
+						&#43; <?php esc_html_e( 'Agregar Parada', 'bondies' ); ?>
+					</button>
+					<button type="button" class="button bondie-add-trip">
+						&#43; <?php esc_html_e( 'Agregar Servicio', 'bondies' ); ?>
+					</button>
+					<span class="bondie-table-hint">
+						<?php esc_html_e( 'Cada columna = una parada · Cada fila = un servicio (horario de paso)', 'bondies' ); ?>
+					</span>
+				</div>
+
+				<div class="bondie-import-row">
+					<button type="button" class="button bondie-import-btn">
+						&#8679; <?php esc_html_e( 'Importar Excel / CSV', 'bondies' ); ?>
+					</button>
+					<input type="file" class="bondie-excel-file"
+					       accept=".xlsx,.xls,.csv" style="display:none">
+					<span class="bondie-import-hint">
+						<?php esc_html_e( 'Fila 1 = nombres de paradas &nbsp;|&nbsp; Filas siguientes = horarios por servicio', 'bondies' ); ?>
+					</span>
+				</div>
+
+				<div class="bondie-table-editor__wrap">
+					<table class="bondie-editor-table">
+						<thead>
+							<tr class="bondie-stops-row">
+								<th class="bondie-row-num">#</th>
+								<?php foreach ( $stops as $stop ) : ?>
+									<th class="bondie-stop-col">
+										<input type="text" class="bondie-stop-input"
+										       value="<?php echo esc_attr( $stop ); ?>"
+										       placeholder="<?php esc_attr_e( 'Parada', 'bondies' ); ?>">
+										<button type="button" class="bondie-remove-stop"
+										        title="<?php esc_attr_e( 'Eliminar parada', 'bondies' ); ?>">&#x2715;</button>
+									</th>
 								<?php endforeach; ?>
 							</tr>
-						<?php endforeach; ?>
-					</tbody>
-				</table>
+						</thead>
+						<tbody class="bondie-trips-body">
+							<?php foreach ( $trips as $r => $trip ) : ?>
+								<tr class="bondie-trip-row">
+									<td class="bondie-row-num">
+										<span class="bondie-row-index"><?php echo $r + 1; ?></span>
+										<button type="button" class="bondie-remove-trip"
+										        title="<?php esc_attr_e( 'Eliminar servicio', 'bondies' ); ?>">&#x2715;</button>
+									</td>
+									<?php foreach ( $stops as $c => $stop ) :
+										$cell = $this->split_cell( $trip[ $c ] ?? '' );
+										?>
+										<td>
+											<div class="bondie-cell-wrap">
+												<input type="text" class="bondie-time-input"
+												       value="<?php echo esc_attr( $cell['time'] ); ?>"
+												       placeholder="00:00">
+												<input type="text" class="bondie-ref-input"
+												       value="<?php echo esc_attr( $cell['ref'] ); ?>"
+												       maxlength="1"
+												       title="<?php esc_attr_e( 'Referencia opcional (ej: A = accesible)', 'bondies' ); ?>">
+											</div>
+										</td>
+									<?php endforeach; ?>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
 			</div>
 
-			<input type="hidden" name="bondie_stops" id="bondie-stops-data"
-			       value="<?php echo esc_attr( $stops_json ); ?>">
-			<input type="hidden" name="bondie_trips" id="bondie-trips-data"
-			       value="<?php echo esc_attr( $trips_json ); ?>">
 		</div>
 		<?php
 	}
@@ -250,24 +300,30 @@ class Bondies_Admin {
 			}
 		}
 
-		if ( isset( $_POST['bondie_stops'] ) ) {
-			$stops = json_decode( wp_unslash( $_POST['bondie_stops'] ), true );
-			if ( is_array( $stops ) ) {
-				$stops = array_values( array_map( 'sanitize_text_field', $stops ) );
-				update_post_meta( $post_id, '_bondie_stops', wp_json_encode( $stops, JSON_UNESCAPED_UNICODE ) );
-			}
-		}
-
-		if ( isset( $_POST['bondie_trips'] ) ) {
-			$trips = json_decode( wp_unslash( $_POST['bondie_trips'] ), true );
-			if ( is_array( $trips ) ) {
+		if ( isset( $_POST['bondie_instances'] ) ) {
+			$raw = json_decode( wp_unslash( $_POST['bondie_instances'] ), true );
+			if ( is_array( $raw ) ) {
 				$clean = [];
-				foreach ( $trips as $trip ) {
-					if ( is_array( $trip ) ) {
-						$clean[] = array_values( array_map( 'sanitize_text_field', $trip ) );
+				foreach ( array_slice( $raw, 0, 4 ) as $inst ) {
+					if ( ! is_array( $inst ) ) {
+						continue;
 					}
+					$label = sanitize_text_field( $inst['label'] ?? '' );
+					$stops = [];
+					if ( isset( $inst['stops'] ) && is_array( $inst['stops'] ) ) {
+						$stops = array_values( array_map( 'sanitize_text_field', $inst['stops'] ) );
+					}
+					$trips = [];
+					if ( isset( $inst['trips'] ) && is_array( $inst['trips'] ) ) {
+						foreach ( $inst['trips'] as $trip ) {
+							if ( is_array( $trip ) ) {
+								$trips[] = array_values( array_map( 'sanitize_text_field', $trip ) );
+							}
+						}
+					}
+					$clean[] = [ 'label' => $label, 'stops' => $stops, 'trips' => $trips ];
 				}
-				update_post_meta( $post_id, '_bondie_trips', wp_json_encode( $clean, JSON_UNESCAPED_UNICODE ) );
+				update_post_meta( $post_id, '_bondie_instances', wp_json_encode( $clean, JSON_UNESCAPED_UNICODE ) );
 			}
 		}
 	}
@@ -276,10 +332,24 @@ class Bondies_Admin {
 	// Helpers
 	// -------------------------------------------------------------------------
 
-	/**
-	 * Separa el valor almacenado "HH:MM" o "HH:MMA" en sus partes.
-	 * Retorna [ 'time' => 'HH:MM', 'ref' => 'A' ] (ref puede ser vacío).
-	 */
+	public function get_instances( $post_id ) {
+		$raw = get_post_meta( $post_id, '_bondie_instances', true );
+		if ( $raw ) {
+			$data = json_decode( $raw, true );
+			if ( is_array( $data ) && ! empty( $data ) ) {
+				return $data;
+			}
+		}
+		// Backward compat: build single instance from old flat fields
+		$stops = json_decode( get_post_meta( $post_id, '_bondie_stops', true ) ?: '[]', true ) ?: [];
+		$trips = json_decode( get_post_meta( $post_id, '_bondie_trips', true ) ?: '[]', true ) ?: [];
+		if ( ! empty( $stops ) || ! empty( $trips ) ) {
+			$notes = get_post_meta( $post_id, '_bondie_notes', true );
+			return [ [ 'label' => $notes ?: '', 'stops' => $stops, 'trips' => $trips ] ];
+		}
+		return [];
+	}
+
 	private function split_cell( $raw ) {
 		$raw = trim( $raw );
 		if ( preg_match( '/^(\d{1,2}:\d{2})\s*([A-Z]?)$/', $raw, $m ) ) {
