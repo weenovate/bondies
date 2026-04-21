@@ -146,9 +146,11 @@
 
 .bondie-editor-table thead th {
 	background: #f6f7f7;
-	position: sticky;
-	top: 0;
-	z-index: 10;
+	/*
+	 * Sin position:sticky en thead: la combinación sticky + overflow:auto
+	 * bloquea el selector de acentos del sistema (IME) en Chrome/macOS,
+	 * impidiendo tipear tildes y ñ en los inputs de nombre de parada.
+	 */
 }
 
 .bondie-row-num {
@@ -239,4 +241,45 @@ thead .bondie-row-num {
 
 .bondie-row-index {
 	margin-right: 4px;
+}
+
+/* ============================================================
+   Import Excel / CSV
+   ============================================================ */
+
+.bondie-import-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	margin-top: 10px;
+	padding: 8px 10px;
+	background: #f6f7f7;
+	border: 1px dashed #c3c4c7;
+	border-radius: 4px;
+}
+
+.bondie-import-btn {
+	background: #fff;
+	color: #2271b1;
+	border-color: #2271b1 !important;
+	font-weight: 500;
+}
+
+.bondie-import-btn:hover,
+.bondie-import-btn:focus {
+	background: #f0f6fc !important;
+	color: #135e96 !important;
+	border-color: #135e96 !important;
+}
+
+.bondie-import-btn:disabled {
+	opacity: 0.65;
+	cursor: not-allowed;
+}
+
+.bondie-import-hint {
+	font-size: 11px;
+	color: #787c82;
+	font-style: italic;
 }

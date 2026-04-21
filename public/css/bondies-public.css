@@ -92,6 +92,11 @@
 	font-style: italic;
 }
 
+/* El área de impresión nunca se muestra en pantalla */
+#bondies-print-area {
+	display: none;
+}
+
 /* ============================================================
    Print / PDF styles
    ============================================================ */
@@ -145,5 +150,22 @@
 		background: none !important;
 		color: inherit !important;
 		font-size: 0.85em;
+	}
+
+	/* ---- Membrete con logo (arriba a la derecha) ---- */
+	.bondies-print-header {
+		display: flex;
+		justify-content: flex-end;
+		align-items: center;
+		padding-bottom: 0.4cm;
+		margin-bottom: 0.5cm;
+		border-bottom: 1px solid #ccc;
+	}
+
+	.bondies-print-logo {
+		height: 1.8cm;   /* ~50 px a 72 dpi — tamaño membrete estándar */
+		width: auto;
+		max-width: 9cm;
+		object-fit: contain;
 	}
 }

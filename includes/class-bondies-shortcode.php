@@ -128,5 +128,29 @@ class Bondies_Shortcode {
 			BONDIES_VERSION,
 			true
 		);
+		// Pasar URL del logo para el membrete del PDF
+		wp_localize_script( 'bondies-public', 'bondiesSettings', [
+			'logoUrl' => $this->get_logo_url(),
+		] );
+	}
+
+	private function get_logo_url() {
+		// 1. Logo personalizado del tema (Customizer → Identidad del sitio)
+		$logo_id = get_theme_mod( 'custom_logo' );
+		if ( $logo_id ) {
+			$url = wp_get_attachment_image_url( $logo_id, 'medium' );
+			if ( $url ) {
+				return esc_url_raw( $url );
+			}
+		}
+		// 2. Ícono del sitio como fallback
+		$icon_id = get_option( 'site_icon' );
+		if ( $icon_id ) {
+			$url = wp_get_attachment_image_url( $icon_id, 'medium' );
+			if ( $url ) {
+				return esc_url_raw( $url );
+			}
+		}
+		return '';
 	}
 }

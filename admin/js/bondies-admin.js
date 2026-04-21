@@ -1,4 +1,4 @@
-/* global jQuery */
+/* global jQuery, XLSX */
 (function ($) {
 	'use strict';
 
@@ -19,10 +19,14 @@
 		$table.on('click', '.bondie-remove-stop', removeStop);
 		$table.on('click', '.bondie-remove-trip', removeTrip);
 
-		// Serialize hidden fields before the post form submits
+		// Importar Excel / CSV
+		$('.bondie-import-btn').on('click', openFilePicker);
+		$('#bondie-excel-file').on('change', importFile);
+
+		// Serializar antes de guardar
 		$('#post').on('submit', serialize);
 
-		// Template selector highlight
+		// Resaltar template seleccionado
 		$('input[name="bondie_template"]').on('change', function () {
 			$('.bondie-tpl-option').removeClass('is-active');
 			$(this).closest('.bondie-tpl-option').addClass('is-active');
@@ -56,8 +60,24 @@
 		return $('<td><input type="text" class="bondie-time-input" placeholder="00:00"></td>');
 	}
 
+	// Convierte el valor crudo de una celda Excel a string "HH:MM".
+	// Excel guarda los tiempos como fracción decimal del día (0=00:00, 0.5=12:00).
+	function toTimeString( val ) {
+		if ( val === undefined || val === null || val === '' ) return '';
+		if ( typeof val === 'string' ) return val.trim();
+		if ( typeof val === 'number' ) {
+			// Fracción decimal de día → minutos totales
+			var totalMins = Math.round( val * 24 * 60 ) % 1440;
+			if ( totalMins < 0 ) totalMins += 1440;
+			var h = Math.floor( totalMins / 60 );
+			var m = totalMins % 60;
+			return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+		}
+		return String(val);
+	}
+
 	// -------------------------------------------------------------------------
-	// Add / Remove Stops (columns)
+	// Agregar / Quitar Paradas (columnas)
 	// -------------------------------------------------------------------------
 
 	function addStop() {
@@ -69,18 +89,15 @@
 
 	function removeStop() {
 		var $th  = $(this).closest('th');
-		// Index among ALL cells of the header row (0 = # column)
 		var idx  = $th.parent().children().index($th);
-
 		$th.remove();
-
 		$tripsBody.find('.bondie-trip-row').each(function () {
 			$(this).children().eq(idx).remove();
 		});
 	}
 
 	// -------------------------------------------------------------------------
-	// Add / Remove Trips (rows)
+	// Agregar / Quitar Servicios (filas)
 	// -------------------------------------------------------------------------
 
 	function addTrip() {
@@ -105,7 +122,98 @@
 	}
 
 	// -------------------------------------------------------------------------
-	// Serialize DOM → hidden JSON fields
+	// Importar Excel / CSV
+	// -------------------------------------------------------------------------
+
+	function openFilePicker() {
+		if ( typeof XLSX === 'undefined' ) {
+			/* eslint-disable no-alert */
+			alert( 'La librería de lectura de Excel no está disponible. Verificá tu conexión a Internet.' );
+			return;
+		}
+		$('#bondie-excel-file').trigger('click');
+	}
+
+	function importFile(e) {
+		var file = e.target.files[0];
+		if ( !file ) return;
+
+		var $btn = $('.bondie-import-btn');
+		$btn.prop('disabled', true).text('Importando…');
+
+		var reader = new FileReader();
+
+		reader.onload = function (ev) {
+			try {
+				var data     = new Uint8Array( ev.target.result );
+				var workbook = XLSX.read( data, { type: 'array', cellDates: false } );
+				var sheet    = workbook.Sheets[ workbook.SheetNames[0] ];
+				var rows     = XLSX.utils.sheet_to_json( sheet, {
+					header: 1,
+					raw:    true,
+					defval: ''
+				});
+
+				if ( !rows || rows.length < 1 ) {
+					alert( 'El archivo no contiene datos.' );
+					return;
+				}
+
+				// Limpiar tabla actual
+				$stopsRow.find('.bondie-stop-col').remove();
+				$tripsBody.empty();
+
+				// Fila 0 → nombres de paradas
+				var stopNames = rows[0];
+				$.each(stopNames, function (_, name) {
+					var $th = makeStopHeader();
+					$th.find('.bondie-stop-input').val( String( name || '' ).trim() );
+					$stopsRow.append($th);
+				});
+
+				// Filas 1..N → servicios (horarios)
+				$.each( rows.slice(1), function (rowIdx, row) {
+					// Ignorar filas completamente vacías
+					var hasData = $.grep(row, function(c){ return c !== ''; }).length > 0;
+					if ( !hasData ) return;
+
+					var $tr  = $('<tr class="bondie-trip-row"></tr>');
+					var $num = $('<td class="bondie-row-num"></td>');
+					$num.append('<span class="bondie-row-index">' + (rowIdx + 1) + '</span>');
+					$num.append('<button type="button" class="bondie-remove-trip" title="Eliminar servicio">&#x2715;</button>');
+					$tr.append($num);
+
+					$.each(stopNames, function (c) {
+						var $td = makeTimeCell();
+						$td.find('.bondie-time-input').val( toTimeString( row[c] ) );
+						$tr.append($td);
+					});
+
+					$tripsBody.append($tr);
+				});
+
+				renumberRows();
+
+			} catch (err) {
+				alert( 'Error al leer el archivo: ' + err.message );
+			} finally {
+				$btn.prop('disabled', false).html('&#8679; Importar Excel / CSV');
+			}
+		};
+
+		reader.onerror = function () {
+			alert('No se pudo leer el archivo.');
+			$btn.prop('disabled', false).html('&#8679; Importar Excel / CSV');
+		};
+
+		reader.readAsArrayBuffer(file);
+
+		// Resetear para permitir reimportar el mismo archivo
+		this.value = '';
+	}
+
+	// -------------------------------------------------------------------------
+	// Serializar DOM → campos ocultos JSON
 	// -------------------------------------------------------------------------
 
 	function serialize() {

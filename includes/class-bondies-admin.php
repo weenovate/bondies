@@ -23,10 +23,18 @@ class Bondies_Admin {
 			[],
 			BONDIES_VERSION
 		);
+		// SheetJS para importar Excel/CSV
+		wp_register_script(
+			'sheetjs',
+			'https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.mini.min.js',
+			[],
+			'0.20.3',
+			true
+		);
 		wp_enqueue_script(
 			'bondies-admin',
 			BONDIES_URL . 'admin/js/bondies-admin.js',
-			[ 'jquery' ],
+			[ 'jquery', 'sheetjs' ],
 			BONDIES_VERSION,
 			true
 		);
@@ -145,6 +153,17 @@ class Bondies_Admin {
 				</span>
 			</div>
 
+			<div class="bondie-import-row">
+				<button type="button" class="button bondie-import-btn">
+					&#8679; <?php esc_html_e( 'Importar Excel / CSV', 'bondies' ); ?>
+				</button>
+				<input type="file" id="bondie-excel-file" class="bondie-excel-file"
+				       accept=".xlsx,.xls,.csv" style="display:none">
+				<span class="bondie-import-hint">
+					<?php esc_html_e( 'Fila 1 = nombres de paradas &nbsp;|&nbsp; Filas siguientes = horarios por servicio', 'bondies' ); ?>
+				</span>
+			</div>
+
 			<div class="bondie-table-editor__wrap">
 				<table class="bondie-editor-table" id="bondie-editor-table">
 					<thead>
@@ -227,7 +246,7 @@ class Bondies_Admin {
 			$stops = json_decode( wp_unslash( $_POST['bondie_stops'] ), true );
 			if ( is_array( $stops ) ) {
 				$stops = array_values( array_map( 'sanitize_text_field', $stops ) );
-				update_post_meta( $post_id, '_bondie_stops', wp_json_encode( $stops ) );
+				update_post_meta( $post_id, '_bondie_stops', wp_json_encode( $stops, JSON_UNESCAPED_UNICODE ) );
 			}
 		}
 
@@ -240,7 +259,7 @@ class Bondies_Admin {
 						$clean[] = array_values( array_map( 'sanitize_text_field', $trip ) );
 					}
 				}
-				update_post_meta( $post_id, '_bondie_trips', wp_json_encode( $clean ) );
+				update_post_meta( $post_id, '_bondie_trips', wp_json_encode( $clean, JSON_UNESCAPED_UNICODE ) );
 			}
 		}
 	}

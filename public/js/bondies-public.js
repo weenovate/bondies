@@ -1,11 +1,14 @@
 /* Bondies – Public JavaScript
  * Maneja el botón "Imprimir / Guardar PDF".
  *
- * Estrategia: antes de llamar a window.print(), se clona solo el elemento
- * de la tabla dentro de #bondies-print-area (creado al vuelo al final del
- * <body>). El CSS de impresión oculta TODO con display:none y muestra
- * únicamente ese div, lo que garantiza que el footer del sitio y cualquier
- * elemento fixed/sticky del tema queden completamente excluidos del PDF.
+ * Estrategia:
+ *  1. Se crea (una sola vez) #bondies-print-area al final del <body>.
+ *  2. Al hacer clic en el botón, se agrega un header-membrete con el logo
+ *     del sitio (arriba a la derecha) y luego el clon de la tabla.
+ *  3. window.print() abre el diálogo de impresión/PDF.
+ *  4. El CSS @media print oculta body>* con display:none y solo muestra
+ *     #bondies-print-area, garantizando que el footer del tema no aparezca.
+ *  5. Pasado 1 s se limpia el área para no dejar basura en el DOM.
  */
 (function () {
 	'use strict';
@@ -21,6 +24,22 @@
 		return printArea;
 	}
 
+	function buildLogoHeader() {
+		var settings = window.bondiesSettings;
+		if ( !settings || !settings.logoUrl ) return null;
+
+		var header = document.createElement( 'div' );
+		header.className = 'bondies-print-header';
+
+		var img = document.createElement( 'img' );
+		img.src       = settings.logoUrl;
+		img.alt       = '';
+		img.className = 'bondies-print-logo';
+
+		header.appendChild( img );
+		return header;
+	}
+
 	function handlePrintClick( e ) {
 		var btn = e.target.closest( '.bondie-pdf-btn' );
 		if ( !btn ) return;
@@ -33,22 +52,25 @@
 
 		var area = getPrintArea();
 
-		// Clonar la tabla completa
-		var clone = el.cloneNode( true );
+		// 1. Membrete con logo (arriba a la derecha)
+		var logoHeader = buildLogoHeader();
+		if ( logoHeader ) {
+			area.appendChild( logoHeader );
+		}
 
-		// Quitar el botón de impresión del clon para que no aparezca en el PDF
+		// 2. Clonar la tabla y quitar el botón de impresión del clon
+		var clone   = el.cloneNode( true );
 		var cloneBtn = clone.querySelector( '.bondie-pdf-btn' );
 		if ( cloneBtn && cloneBtn.parentNode ) {
 			cloneBtn.parentNode.removeChild( cloneBtn );
 		}
-
 		area.appendChild( clone );
 
-		// Dar un tick al navegador para que el DOM se actualice antes del diálogo
+		// 3. Imprimir
 		requestAnimationFrame( function () {
 			window.print();
 
-			// Limpiar el área después de que el diálogo se cierre
+			// 4. Limpiar después del diálogo
 			setTimeout( function () {
 				while ( area.firstChild ) {
 					area.removeChild( area.firstChild );
