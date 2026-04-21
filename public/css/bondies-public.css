@@ -1,3 +1,5 @@
+@charset "UTF-8";
+
 /* ============================================================
    Bondies – Public Base Styles
    ============================================================ */
@@ -94,38 +96,34 @@
    Print / PDF styles
    ============================================================ */
 
+/*
+ * Strategy: JS clones the schedule into #bondies-print-area before printing.
+ * display:none (not visibility:hidden) is used so that fixed/sticky theme
+ * elements like footers are truly suppressed in the print dialog.
+ */
 @media print {
-	/* Hide everything on the page */
+	/* Ocultar absolutamente todo en la página */
 	body > * {
-		visibility: hidden;
+		display: none !important;
 	}
 
-	/* Reveal only the element being printed */
-	.bondie-schedule.bondie-printing,
-	.bondie-schedule.bondie-printing * {
-		visibility: visible;
-	}
-
-	/* Position it flush top-left so it fills the paper */
-	.bondie-schedule.bondie-printing {
-		position: fixed;
-		top: 0;
-		left: 0;
+	/* Mostrar solo el contenedor de impresión de Bondies */
+	#bondies-print-area {
+		display: block !important;
+		position: static !important;
 		width: 100%;
-		padding: 1.5cm 1.5cm 1cm;
+		padding: 1cm 1.5cm;
 	}
 
-	/* Never print the PDF button */
+	/* Estilos de tabla para impresión */
 	.bondie-pdf-btn {
 		display: none !important;
 	}
 
-	/* Remove overflow clips so full table prints */
 	.bondie-schedule__table-wrap {
 		overflow: visible !important;
 	}
 
-	/* Force table to fill the page width */
 	.bondie-schedule__table {
 		width: 100% !important;
 		min-width: 0 !important;
@@ -137,12 +135,11 @@
 		padding: 4pt 6pt !important;
 	}
 
-	/* Keep rows together when possible */
 	.bondie-schedule__table tbody tr {
 		page-break-inside: avoid;
 	}
 
-	/* Notes badge – flatten for print */
+	/* Aplanar badge de notas para impresión */
 	.bondie-schedule__notes {
 		border-radius: 0 !important;
 		background: none !important;
