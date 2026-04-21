@@ -57,7 +57,21 @@
 	}
 
 	function makeTimeCell() {
-		return $('<td><input type="text" class="bondie-time-input" placeholder="00:00"></td>');
+		return $(
+			'<td><div class="bondie-cell-wrap">' +
+				'<input type="text" class="bondie-time-input" placeholder="00:00">' +
+				'<input type="text" class="bondie-ref-input" maxlength="1" title="Referencia opcional (ej: A = accesible)">' +
+			'</div></td>'
+		);
+	}
+
+	// Splits a stored value like "06:30A" into { time: "06:30", ref: "A" }
+	function parseCellValue( raw ) {
+		if ( typeof raw !== 'string' ) raw = toTimeString( raw );
+		raw = raw.trim();
+		var m = raw.match( /^(\d{1,2}:\d{2})\s*([A-Z]?)$/ );
+		if ( m ) return { time: m[1], ref: m[2] || '' };
+		return { time: raw, ref: '' };
 	}
 
 	// Convierte el valor crudo de una celda Excel a string "HH:MM".
@@ -128,7 +142,7 @@
 	function openFilePicker() {
 		if ( typeof XLSX === 'undefined' ) {
 			/* eslint-disable no-alert */
-			alert( 'La librería de lectura de Excel no está disponible. Verificá tu conexión a Internet.' );
+			alert( 'La librería de lectura de Excel no está disponible.' );
 			return;
 		}
 		$('#bondie-excel-file').trigger('click');
@@ -184,8 +198,10 @@
 					$tr.append($num);
 
 					$.each(stopNames, function (c) {
-						var $td = makeTimeCell();
-						$td.find('.bondie-time-input').val( toTimeString( row[c] ) );
+						var $td   = makeTimeCell();
+						var parts = parseCellValue( row[c] );
+						$td.find('.bondie-time-input').val( parts.time );
+						$td.find('.bondie-ref-input').val( parts.ref );
 						$tr.append($td);
 					});
 
@@ -226,8 +242,10 @@
 		var trips = [];
 		$tripsBody.find('.bondie-trip-row').each(function () {
 			var row = [];
-			$(this).find('.bondie-time-input').each(function () {
-				row.push( $.trim( $(this).val() ) );
+			$(this).find('.bondie-cell-wrap').each(function () {
+				var time = $.trim( $(this).find('.bondie-time-input').val() );
+				var ref  = $.trim( $(this).find('.bondie-ref-input').val() ).toUpperCase().replace(/[^A-Z]/, '');
+				row.push( ref ? time + ref : time );
 			});
 			trips.push(row);
 		});

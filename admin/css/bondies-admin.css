@@ -195,9 +195,15 @@ thead .bondie-row-num {
 	box-shadow: 0 0 0 1px #2271b1;
 }
 
+.bondie-cell-wrap {
+	display: flex;
+	align-items: center;
+	gap: 3px;
+}
+
 .bondie-time-input {
-	width: 100%;
-	min-width: 68px;
+	flex: 1;
+	min-width: 55px;
 	border: 1px solid transparent;
 	background: transparent;
 	padding: 4px 6px;
@@ -213,6 +219,33 @@ thead .bondie-row-num {
 	outline: none;
 	background: #fff;
 	box-shadow: 0 0 0 1px #2271b1;
+}
+
+.bondie-ref-input {
+	width: 24px;
+	flex-shrink: 0;
+	border: 1px solid transparent;
+	background: transparent;
+	padding: 4px 3px;
+	font-size: 11px;
+	font-weight: 700;
+	text-align: center;
+	text-transform: uppercase;
+	color: #2271b1;
+	box-sizing: border-box;
+	border-radius: 3px;
+}
+
+.bondie-ref-input:focus {
+	border-color: #2271b1;
+	outline: none;
+	background: #e8f0fe;
+	box-shadow: 0 0 0 1px #2271b1;
+}
+
+.bondie-ref-input::placeholder {
+	color: #c3c4c7;
+	font-weight: 400;
 }
 
 .bondie-remove-stop,

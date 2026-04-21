@@ -92,6 +92,20 @@
 	font-style: italic;
 }
 
+/* Logo membrete: oculto en pantalla, visible solo en impresión */
+.bondie-print-logo-wrap {
+	display: none;
+}
+
+/* Referencia opcional junto al horario (ej: superíndice "A") */
+.bondie-time-ref {
+	font-size: 0.65em;
+	font-weight: 700;
+	vertical-align: super;
+	margin-left: 1px;
+	line-height: 1;
+}
+
 /* El área de impresión nunca se muestra en pantalla */
 #bondies-print-area {
 	display: none;
@@ -153,8 +167,8 @@
 	}
 
 	/* ---- Membrete con logo (arriba a la derecha) ---- */
-	.bondies-print-header {
-		display: flex;
+	.bondie-print-logo-wrap {
+		display: flex !important;
 		justify-content: flex-end;
 		align-items: center;
 		padding-bottom: 0.4cm;
@@ -162,8 +176,8 @@
 		border-bottom: 1px solid #ccc;
 	}
 
-	.bondies-print-logo {
-		height: 1.8cm;   /* ~50 px a 72 dpi — tamaño membrete estándar */
+	.bondie-print-logo {
+		height: 1.8cm;
 		width: auto;
 		max-width: 9cm;
 		object-fit: contain;

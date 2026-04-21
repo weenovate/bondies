@@ -23,12 +23,12 @@ class Bondies_Admin {
 			[],
 			BONDIES_VERSION
 		);
-		// SheetJS para importar Excel/CSV
-		wp_register_script(
+		// SheetJS bundleado localmente (no requiere internet)
+		wp_enqueue_script(
 			'sheetjs',
-			'https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.mini.min.js',
+			BONDIES_URL . 'admin/js/xlsx.mini.min.js',
 			[],
-			'0.20.3',
+			'0.18.5',
 			true
 		);
 		wp_enqueue_script(
@@ -188,11 +188,19 @@ class Bondies_Admin {
 									<button type="button" class="bondie-remove-trip"
 									        title="<?php esc_attr_e( 'Eliminar servicio', 'bondies' ); ?>">&#x2715;</button>
 								</td>
-								<?php foreach ( $stops as $c => $stop ) : ?>
+								<?php foreach ( $stops as $c => $stop ) :
+											$cell = $this->split_cell( $trip[ $c ] ?? '' );
+										?>
 									<td>
-										<input type="text" class="bondie-time-input"
-										       value="<?php echo esc_attr( $trip[ $c ] ?? '' ); ?>"
-										       placeholder="00:00">
+										<div class="bondie-cell-wrap">
+											<input type="text" class="bondie-time-input"
+											       value="<?php echo esc_attr( $cell['time'] ); ?>"
+											       placeholder="00:00">
+											<input type="text" class="bondie-ref-input"
+											       value="<?php echo esc_attr( $cell['ref'] ); ?>"
+											       maxlength="1"
+											       title="<?php esc_attr_e( 'Referencia opcional (ej: A = accesible)', 'bondies' ); ?>">
+										</div>
 									</td>
 								<?php endforeach; ?>
 							</tr>
@@ -267,6 +275,18 @@ class Bondies_Admin {
 	// -------------------------------------------------------------------------
 	// Helpers
 	// -------------------------------------------------------------------------
+
+	/**
+	 * Separa el valor almacenado "HH:MM" o "HH:MMA" en sus partes.
+	 * Retorna [ 'time' => 'HH:MM', 'ref' => 'A' ] (ref puede ser vacío).
+	 */
+	private function split_cell( $raw ) {
+		$raw = trim( $raw );
+		if ( preg_match( '/^(\d{1,2}:\d{2})\s*([A-Z]?)$/', $raw, $m ) ) {
+			return [ 'time' => $m[1], 'ref' => $m[2] ];
+		}
+		return [ 'time' => $raw, 'ref' => '' ];
+	}
 
 	private function get_templates() {
 		return [

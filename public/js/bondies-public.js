@@ -3,8 +3,8 @@
  *
  * Estrategia:
  *  1. Se crea (una sola vez) #bondies-print-area al final del <body>.
- *  2. Al hacer clic en el botón, se agrega un header-membrete con el logo
- *     del sitio (arriba a la derecha) y luego el clon de la tabla.
+ *  2. Al hacer clic en el botón, se clona la tabla completa (incluyendo
+ *     el logo ya embebido en el HTML) y se quita solo el botón de impresión.
  *  3. window.print() abre el diálogo de impresión/PDF.
  *  4. El CSS @media print oculta body>* con display:none y solo muestra
  *     #bondies-print-area, garantizando que el footer del tema no aparezca.
@@ -24,22 +24,6 @@
 		return printArea;
 	}
 
-	function buildLogoHeader() {
-		var settings = window.bondiesSettings;
-		if ( !settings || !settings.logoUrl ) return null;
-
-		var header = document.createElement( 'div' );
-		header.className = 'bondies-print-header';
-
-		var img = document.createElement( 'img' );
-		img.src       = settings.logoUrl;
-		img.alt       = '';
-		img.className = 'bondies-print-logo';
-
-		header.appendChild( img );
-		return header;
-	}
-
 	function handlePrintClick( e ) {
 		var btn = e.target.closest( '.bondie-pdf-btn' );
 		if ( !btn ) return;
@@ -52,25 +36,19 @@
 
 		var area = getPrintArea();
 
-		// 1. Membrete con logo (arriba a la derecha)
-		var logoHeader = buildLogoHeader();
-		if ( logoHeader ) {
-			area.appendChild( logoHeader );
-		}
-
-		// 2. Clonar la tabla y quitar el botón de impresión del clon
-		var clone   = el.cloneNode( true );
+		// Clonar la tabla y quitar el botón de impresión del clon
+		var clone    = el.cloneNode( true );
 		var cloneBtn = clone.querySelector( '.bondie-pdf-btn' );
 		if ( cloneBtn && cloneBtn.parentNode ) {
 			cloneBtn.parentNode.removeChild( cloneBtn );
 		}
 		area.appendChild( clone );
 
-		// 3. Imprimir
+		// Imprimir
 		requestAnimationFrame( function () {
 			window.print();
 
-			// 4. Limpiar después del diálogo
+			// Limpiar después del diálogo
 			setTimeout( function () {
 				while ( area.firstChild ) {
 					area.removeChild( area.firstChild );

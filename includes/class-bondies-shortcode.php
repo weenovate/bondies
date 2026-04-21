@@ -34,11 +34,18 @@ class Bondies_Shortcode {
 
 		$this->enqueue_assets( $template );
 
-		$uid = 'bondie-schedule-' . $post_id;
+		$uid      = 'bondie-schedule-' . $post_id;
+		$logo_url = $this->get_logo_url();
 
 		ob_start();
 		?>
 		<div class="bondie-schedule bondie-template-<?php echo esc_attr( $template ); ?>" id="<?php echo esc_attr( $uid ); ?>">
+
+			<?php if ( $logo_url ) : ?>
+				<div class="bondie-print-logo-wrap" aria-hidden="true">
+					<img src="<?php echo esc_url( $logo_url ); ?>" alt="" class="bondie-print-logo">
+				</div>
+			<?php endif; ?>
 
 			<div class="bondie-schedule__header">
 				<h2 class="bondie-schedule__title"><?php echo esc_html( $post->post_title ); ?></h2>
@@ -72,7 +79,7 @@ class Bondies_Shortcode {
 							<?php foreach ( $trips as $trip ) : ?>
 								<tr>
 									<?php foreach ( $stops as $i => $stop ) : ?>
-										<td><?php echo esc_html( $trip[ $i ] ?? '–' ); ?></td>
+										<td><?php echo $this->format_cell( $trip[ $i ] ?? '' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
 									<?php endforeach; ?>
 								</tr>
 							<?php endforeach; ?>
@@ -128,10 +135,17 @@ class Bondies_Shortcode {
 			BONDIES_VERSION,
 			true
 		);
-		// Pasar URL del logo para el membrete del PDF
-		wp_localize_script( 'bondies-public', 'bondiesSettings', [
-			'logoUrl' => $this->get_logo_url(),
-		] );
+	}
+
+	private function format_cell( $raw ) {
+		$raw = trim( $raw );
+		if ( $raw === '' ) {
+			return '–';
+		}
+		if ( preg_match( '/^(\d{1,2}:\d{2})\s*([A-Z])$/', $raw, $m ) ) {
+			return esc_html( $m[1] ) . '<sup class="bondie-time-ref">' . esc_html( $m[2] ) . '</sup>';
+		}
+		return esc_html( $raw );
 	}
 
 	private function get_logo_url() {
